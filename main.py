@@ -5,7 +5,7 @@ import fitz
 from dataclasses import asdict
 from datetime import datetime
 from typing import List
-from recipe import Recipe
+from lufa import LufaRecipe
 
 _MEAL_PLAN_SEPARATOR = re.compile(r'Meal Plan for the Week\s+')
 _RECIPE_TITLE_PATTERN = re.compile(r"\*\*\s\d")
@@ -18,12 +18,12 @@ def extract_order_identifier_filename(pdf_path: str) -> str:
     return order_identifier
 
 
-def extract_recipes_from_pdf(file_path: str) -> List[Recipe]:
+def extract_recipes_from_pdf(file_path: str) -> List[LufaRecipe]:
     """Extracts recipe data from a given PDF file."""
     text = _extract_text_from_pdf(file_path)
     recipe_sections = _split_into_recipe_sections(text)
 
-    return [Recipe.from_text_section(section) for section in recipe_sections]
+    return [LufaRecipe.from_string(section) for section in recipe_sections]
 
 
 def _extract_text_from_pdf(file_path: str) -> str:
@@ -45,7 +45,7 @@ def _split_into_recipe_sections(text: str) -> List[str]:
     return recipe_contents
 
 
-def dump_all_recipes_to_json(all_recipes: list[Recipe], output_filename: str):
+def dump_all_recipes_to_json(all_recipes: list[LufaRecipe], output_filename: str):
     recipes_dict = [asdict(recipe) for recipe in all_recipes]
 
     with open(output_filename, "w", encoding="utf-8") as f:
