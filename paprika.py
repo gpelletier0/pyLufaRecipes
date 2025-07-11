@@ -5,6 +5,7 @@ from dataclasses import dataclass, field, asdict
 from datetime import datetime
 from typing import List, Optional
 from lufa import LufaRecipe
+from image_generation import RecipeImageGenerator
 
 
 @dataclass
@@ -38,6 +39,8 @@ class PaprikaRecipe:
 
     @classmethod
     def from_lufa_recipe(cls, lufa_recipe: LufaRecipe) -> 'PaprikaRecipe':
+        generator = RecipeImageGenerator()
+
         return cls(
             name=lufa_recipe.name,
             ingredients=lufa_recipe.ingredients,
@@ -49,6 +52,7 @@ class PaprikaRecipe:
             source=lufa_recipe.source,
             source_url=lufa_recipe.source,
             categories=lufa_recipe.categories,
+            photo_data=generator.generate_with_stable_diffusion(lufa_recipe.name)
         )
 
     def to_dict(self) -> dict:
