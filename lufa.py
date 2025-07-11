@@ -1,4 +1,5 @@
 ﻿from dataclasses import dataclass, field
+from typing import List
 
 
 @dataclass
@@ -12,7 +13,7 @@ class LufaRecipe:
     ingredients: str
     instructions: str
     tip: str
-    categories: [str] = field(default_factory=lambda: ["Lufa"])
+    categories: List[str] = field(default_factory=lambda: ["Lufa"])
     source: str = "Lufa.com"
 
     @classmethod
