@@ -1,6 +1,7 @@
 ﻿import base64
 import os
-import requests
+from io import BytesIO
+from huggingface_hub import InferenceClient
 
 
 class RecipeImageGenerator:
@@ -10,32 +11,35 @@ class RecipeImageGenerator:
         self.__stable_diffusion_api_key = os.environ.get("STABLE_DIFFUSION_API_KEY")
 
     def generate_with_stable_diffusion(self, recipe_name: str) -> str | None:
-        api_url = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0"
-        headers = {"Authorization": f"Bearer {self.__stable_diffusion_api_key}"}
+        client = InferenceClient(
+            provider="nebius",
+            api_key=self.__stable_diffusion_api_key
+        )
 
-        payload = {
-            "inputs": f"A beautiful small image of a {recipe_name}",
-            "options": {"wait_for_model": True}
-        }
+        image = client.text_to_image(
+            f"A beautiful small image of a {recipe_name}",
+            model="stabilityai/stable-diffusion-xl-base-1.0",
+        )
 
-        response = requests.post(api_url, headers=headers, json=payload)
+        # self.save_image_to_disk(image, recipe_name)
 
-        if response.status_code == 200:
-            image_bytes = response.content
+        return self.pil_to_base64(image)
 
-            image_dir = "generated_images"
-            if not os.path.exists(image_dir):
-                os.makedirs(image_dir)
+    @staticmethod
+    def save_image_to_disk(image, recipe_name):
+        image_dir = "generated_images"
+        if not os.path.exists(image_dir):
+            os.makedirs(image_dir)
 
-            safe_filename = "".join(c for c in recipe_name if c.isalnum() or c in (' ', '_')).rstrip().replace(' ', '_')
-            image_path = os.path.join(image_dir, f"{safe_filename}.jpg")
+        safe_filename = "".join(c for c in recipe_name if c.isalnum() or c in (' ', '_')).rstrip().replace(' ', '_')
+        image_path = os.path.join(image_dir, f"{safe_filename}.jpg")
+        image.save(image_path, format='JPEG')
 
-            with open(image_path, "wb") as f:
-                f.write(image_bytes)
+        print(f"Image saved to {image_path}")
 
-            print(f"Image saved to {image_path}")
+    @staticmethod
+    def pil_to_base64(image):
+        buffer = BytesIO()
+        image.save(buffer, format='JPEG')
 
-            return base64.b64encode(image_bytes).decode("utf-8")
-        else:
-            print(f"Error generating image: {response.text}")
-            return None
+        return base64.b64encode(buffer.getvalue()).decode('utf-8')
