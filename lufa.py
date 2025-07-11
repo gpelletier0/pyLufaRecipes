@@ -1,8 +1,9 @@
-﻿from dataclasses import dataclass
+﻿from dataclasses import dataclass, field
+from typing import List
 
 
 @dataclass
-class Recipe:
+class LufaRecipe:
     name: str
     meal_type: str
     preparation_time: str
@@ -12,16 +13,18 @@ class Recipe:
     ingredients: str
     instructions: str
     tip: str
+    categories: List[str] = field(default_factory=lambda: ["Lufa"])
+    source: str = "Lufa.com"
 
     @classmethod
-    def from_text_section(cls, section: str) -> 'Recipe':
+    def from_string(cls, string: str) -> 'LufaRecipe':
         try:
-            header, rest = section.split("Ingredients\nQuantity", 1)
+            header, rest = string.split("Ingredients\nQuantity", 1)
             header_lines = header.strip().split("\n")
             ingredients_lines, rest = rest.split("Cooking Instructions:", 1)
             instructions_lines, tip_part = rest.split("Tip!:", 1)
         except ValueError as e:
-            raise ValueError(f"Invalid recipe section format: {e}\nSection: {section[:200]}...") from e
+            raise ValueError(f"Invalid recipe section format: {e}\nSection: {string[:200]}...") from e
 
         def _get_value(line: str) -> str:
             parts = line.split(":", 1)

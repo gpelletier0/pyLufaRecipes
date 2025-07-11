@@ -1,11 +1,13 @@
 ﻿import json
+import os
 import re
-import sys
 import fitz
+import argparse
 from dataclasses import asdict
 from datetime import datetime
 from typing import List
-from recipe import Recipe
+from lufa import LufaRecipe
+from paprika import PaprikaRecipe
 
 _MEAL_PLAN_SEPARATOR = re.compile(r'Meal Plan for the Week\s+')
 _RECIPE_TITLE_PATTERN = re.compile(r"\*\*\s\d")
@@ -18,12 +20,11 @@ def extract_order_identifier_filename(pdf_path: str) -> str:
     return order_identifier
 
 
-def extract_recipes_from_pdf(file_path: str) -> List[Recipe]:
-    """Extracts recipe data from a given PDF file."""
+def extract_recipes_from_pdf(file_path: str) -> List[LufaRecipe]:
     text = _extract_text_from_pdf(file_path)
     recipe_sections = _split_into_recipe_sections(text)
 
-    return [Recipe.from_text_section(section) for section in recipe_sections]
+    return [LufaRecipe.from_string(section) for section in recipe_sections]
 
 
 def _extract_text_from_pdf(file_path: str) -> str:
@@ -45,7 +46,7 @@ def _split_into_recipe_sections(text: str) -> List[str]:
     return recipe_contents
 
 
-def dump_all_recipes_to_json(all_recipes: list[Recipe], output_filename: str):
+def dump_all_recipes_to_json(all_recipes: list[LufaRecipe], output_filename: str):
     recipes_dict = [asdict(recipe) for recipe in all_recipes]
 
     with open(output_filename, "w", encoding="utf-8") as f:
@@ -54,14 +55,27 @@ def dump_all_recipes_to_json(all_recipes: list[Recipe], output_filename: str):
     print(f"✅ Extracted {len(all_recipes)} recipes to '{output_filename}'")
 
 
-def main():
-    if len(sys.argv) > 1:
-        pdf_path = sys.argv[1]
-    else:
-        pdf_path = "Meal-Plan-Order-23135319.pdf"
+def dump_all_recipes_to_paprika_file(all_recipes):
+    output_dir = "recipes"
+    os.makedirs(output_dir, exist_ok=True)
 
-    order_identifier = extract_order_identifier_filename(pdf_path)
-    output_filename = f"meal_plan_recipes-{order_identifier}.json"
+    for lufa_recipe in all_recipes:
+        paprika_recipe = PaprikaRecipe.from_lufa_recipe(lufa_recipe)
+
+        safe_name = paprika_recipe.name.replace('/', '_').replace('\\', '_').replace(':', '_')
+        output_path = os.path.join(output_dir, safe_name)
+
+        paprika_recipe.to_paprika_file(output_path)
+
+    print(f"✅ Extracted {len(all_recipes)} recipes to Paprika format files in 'recipes' directory")
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Process Lufa meal plan PDF and extract recipes")
+    parser.add_argument("pdf_path", nargs="?", default="Meal-Plan-Order-23135319.pdf", help="Path to the PDF file")
+    parser.add_argument("--format", "-f", choices=["json", "paprika"], default="paprika", help="Output format (default: paprika)")
+    args = parser.parse_args()
+    pdf_path = args.pdf_path
 
     try:
         all_recipes = extract_recipes_from_pdf(pdf_path)
@@ -69,7 +83,12 @@ def main():
             print("No recipes were found in the document.")
             return
 
-        dump_all_recipes_to_json(all_recipes, output_filename)
+        if args.format == "json":
+            order_identifier = extract_order_identifier_filename(pdf_path)
+            output_filename = f"meal_plan_recipes-{order_identifier}.json"
+            dump_all_recipes_to_json(all_recipes, output_filename)
+        else:
+            dump_all_recipes_to_paprika_file(all_recipes)
 
     except FileNotFoundError:
         print(f"Error: The file '{pdf_path}' was not found.")
