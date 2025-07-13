@@ -6,6 +6,7 @@ import argparse
 from dataclasses import asdict
 from datetime import datetime
 from typing import List
+from image_generation import RecipeImageGenerator
 from lufa import LufaRecipe
 from paprika import PaprikaRecipe
 
@@ -57,10 +58,12 @@ def dump_all_recipes_to_json(all_recipes: list[LufaRecipe], output_filename: str
 
 def dump_all_recipes_to_paprika_file(all_recipes):
     output_dir = "recipes"
+    generator = RecipeImageGenerator()
+
     os.makedirs(output_dir, exist_ok=True)
 
     for lufa_recipe in all_recipes:
-        paprika_recipe = PaprikaRecipe.from_lufa_recipe(lufa_recipe)
+        paprika_recipe = PaprikaRecipe.from_lufa_recipe(lufa_recipe, generator)
 
         safe_name = paprika_recipe.name.replace('/', '_').replace('\\', '_').replace(':', '_')
         output_path = os.path.join(output_dir, safe_name)

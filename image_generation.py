@@ -5,25 +5,33 @@ from huggingface_hub import InferenceClient
 
 
 class RecipeImageGenerator:
-    __prompt = f"A small image for the following recipe description for a paprika recipe manager (https://www.paprikaapp.com/):"
+    __has_credits_left = True
 
     def __init__(self):
         self.__stable_diffusion_api_key = os.environ.get("STABLE_DIFFUSION_API_KEY")
 
     def generate_with_stable_diffusion(self, recipe_name: str) -> str | None:
+        if not self.__has_credits_left:
+            return None
+
         client = InferenceClient(
             provider="nebius",
             api_key=self.__stable_diffusion_api_key
         )
 
-        image = client.text_to_image(
-            f"A beautiful small image of a {recipe_name}",
-            model="stabilityai/stable-diffusion-xl-base-1.0",
-        )
+        try:
+            image = client.text_to_image(
+                f"A beautiful small image of a {recipe_name}",
+                model="stabilityai/stable-diffusion-xl-base-1.0",
+            )
 
-        # self.save_image_to_disk(image, recipe_name)
+            # self.save_image_to_disk(image, recipe_name)
 
-        return self.pil_to_base64(image)
+            return self.pil_to_base64(image)
+
+        except Exception:
+            self.__has_credits_left = False
+            return None
 
     @staticmethod
     def save_image_to_disk(image, recipe_name):

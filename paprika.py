@@ -38,8 +38,8 @@ class PaprikaRecipe:
     __paprika_file_extension = ".paprikarecipe"
 
     @classmethod
-    def from_lufa_recipe(cls, lufa_recipe: LufaRecipe) -> 'PaprikaRecipe':
-        generator = RecipeImageGenerator()
+    def from_lufa_recipe(cls, lufa_recipe: LufaRecipe, generator: RecipeImageGenerator) -> 'PaprikaRecipe':
+        base64_image = generator.generate_with_stable_diffusion(lufa_recipe.name)
 
         return cls(
             name=lufa_recipe.name,
@@ -52,7 +52,7 @@ class PaprikaRecipe:
             source=lufa_recipe.source,
             source_url=lufa_recipe.source,
             categories=lufa_recipe.categories,
-            photo_data=generator.generate_with_stable_diffusion(lufa_recipe.name)
+            photo_data=base64_image
         )
 
     def to_dict(self) -> dict:
