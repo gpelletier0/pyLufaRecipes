@@ -5,13 +5,14 @@ import fitz
 import argparse
 from dataclasses import asdict
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 from image_generation import RecipeImageGenerator
 from lufa import LufaRecipe
 from paprika import PaprikaRecipe
 
 _MEAL_PLAN_SEPARATOR = re.compile(r'Meal Plan for the Week\s+')
 _RECIPE_TITLE_PATTERN = re.compile(r"Lunch|Dinner")
+_HOURS_MINUTES_SECONDS_PATTERN = re.compile(r'\b\d{1,2}:\d{2}:\d{2}\b')
 
 
 def extract_order_identifier_filename(pdf_path: str) -> str:
@@ -33,17 +34,35 @@ def _extract_text_from_pdf(file_path: str) -> str:
     return "\n".join(page.get_text() for page in doc)
 
 
+def _clean_recipe_title_line(title_line) -> str:
+    title_line = title_line.replace('**', '')
+    title_line = re.sub(_HOURS_MINUTES_SECONDS_PATTERN, '', title_line).strip()
+
+    return title_line
+
+
+def _extract_and_clean_recipe_from_section(section_text: str) -> Optional[str]:
+    lines = section_text.splitlines()
+    for i, line in enumerate(lines):
+        if _RECIPE_TITLE_PATTERN.search(line):
+            recipe_lines = lines[i - 1:]
+            recipe_lines[0] = _clean_recipe_title_line(recipe_lines[0])
+
+            return "\n".join(recipe_lines)
+
+    return None
+
+
 def _split_into_recipe_sections(text: str) -> List[str]:
     recipe_contents = []
     for section in _MEAL_PLAN_SEPARATOR.split(text):
         if not section.strip():
             continue
 
-        lines = section.splitlines()
-        for i, line in enumerate(lines):
-            if _RECIPE_TITLE_PATTERN.search(line):
-                recipe_contents.append("\n".join(lines[i-1:]))
-                break
+        cleaned_recipe = _extract_and_clean_recipe_from_section(section)
+        if cleaned_recipe:
+            recipe_contents.append(cleaned_recipe)
+
     return recipe_contents
 
 
