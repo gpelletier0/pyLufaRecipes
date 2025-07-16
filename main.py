@@ -11,7 +11,7 @@ from lufa import LufaRecipe
 from paprika import PaprikaRecipe
 
 _MEAL_PLAN_SEPARATOR = re.compile(r'Meal Plan for the Week\s+')
-_RECIPE_TITLE_PATTERN = re.compile(r"\*\*\s\d")
+_RECIPE_TITLE_PATTERN = re.compile(r"Lunch|Dinner")
 
 
 def extract_order_identifier_filename(pdf_path: str) -> str:
@@ -42,7 +42,7 @@ def _split_into_recipe_sections(text: str) -> List[str]:
         lines = section.splitlines()
         for i, line in enumerate(lines):
             if _RECIPE_TITLE_PATTERN.search(line):
-                recipe_contents.append("\n".join(lines[i:]))
+                recipe_contents.append("\n".join(lines[i-1:]))
                 break
     return recipe_contents
 
