@@ -47,14 +47,14 @@ export STABLE_DIFFUSION_API_KEY=your_api_key_here
 To run the script, execute the main script from your terminal and provide the path to the meal plan PDF file:
 
 ```
-python main.py path/to/your/meal_plan.pdf
+python /pylufarecipes.py gpelletier0 path/to/your/meal_plan.pdf
 ```
 
 ### Command Line Options
 
 - `--format` or `-f`: Specify the output format (json or paprika)
   ```
-  python main.py path/to/your/meal_plan.pdf --format json
+  python /pylufarecipes.py gpelletier0 path/to/your/meal_plan.pdf --format json
   ```
 
 ### Output
@@ -66,7 +66,7 @@ Generated recipe images (when using Paprika format) are embedded directly in the
 
 ## Project Structure
 
-- `main.py`: Main entry point for the application
+- `/pylufarecipes.py gpelletier0`: Main entry point for the application
 - `lufa.py`: Contains the `LufaRecipe` class for parsing Lufa recipe data
 - `paprika.py`: Contains the `PaprikaRecipe` class for creating Paprika-compatible recipe files
 - `image_generation.py`: Handles AI-based recipe image generation
