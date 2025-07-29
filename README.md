@@ -50,13 +50,41 @@ To run the script, execute the main script from your terminal and provide the pa
 python pylufarecipes.py path/to/your/meal_plan.pdf
 ```
 
+
 ### Command Line Options
 
-- `--format` or `-f`: Specify the output format (json or paprika)
+- `pdf_path`: Path to the PDF file to process (required positional argument)
+
+- `--format`, `-f`: Specify the output format
+  - Choices: `json`, `paprika`
+  - Default: `paprika`
   ```
-  python pylufarecipes.py path/to/your/meal_plan.pdf --format json
+  python pylufarecipes.py meal_plan.pdf --format json
   ```
 
+- `--output-dir`, `-o`: Output directory for generated files
+  - Default: `./recipes`
+  ```
+  python pylufarecipes.py meal_plan.pdf --output-dir ./my_recipes
+  ```
+
+- `--no-images`: Skip image generation for recipes
+  - Only affects Paprika format output
+  ```
+  python pylufarecipes.py meal_plan.pdf --no-images
+  ```
+
+- `--verbose`, `-v`: Enable verbose output
+  - Shows detailed processing information
+  ```
+  python pylufarecipes.py meal_plan.pdf --verbose
+  ```
+
+- `--version`: Show program version and exit
+  ```
+  python pylufarecipes.py --version
+  ```
+  
 ### Output
 
 - **JSON format**: Creates a single JSON file with all extracted recipes
@@ -67,7 +95,14 @@ Generated recipe images (when using Paprika format) are embedded directly in the
 ## Project Structure
 
 - `pylufarecipes.py`: Main entry point for the application
-- `lufa.py`: Contains the `LufaRecipe` class for parsing Lufa recipe data
-- `paprika.py`: Contains the `PaprikaRecipe` class for creating Paprika-compatible recipe files
-- `image_generation.py`: Handles AI-based recipe image generation
+- `cli/`: Command-line interface components
+  - `recipe_parser_cli.py`: CLI argument parsing and handling
+- `models/`: Data models for recipe representation
+  - `lufa_recipe.py`: Contains the `LufaRecipe` class for parsing Lufa recipe data
+- `parsers/`: PDF parsing functionality
+  - `pdf_parser.py`: PDF text extraction and parsing logic
+- `services/`: Business logic and services
+  - `image_generator.py`: Handles AI-based recipe image generation
+- `exporters/`: Output format handlers
+  - `paprika_recipe.py`: Contains the `PaprikaRecipe` class for creating Paprika-compatible recipe files
 - `requirements.txt`: Lists all required Python dependencies
